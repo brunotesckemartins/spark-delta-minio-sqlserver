@@ -1,0 +1,12 @@
+id_unidade,id_orgao,codigo_unidade,nome_unidade,sigla
+1,1,260001,Fundo Nacional de Desenvolvimento da Educacao,FNDE
+2,1,260002,Coordenacao de Aperfeicoamento de Pessoal de Nivel Superior,CAPES
+3,1,260003,Instituto Nacional de Estudos e Pesquisas Educacionais,INEP
+4,2,300001,Fundo Nacional de Saude,FNS
+5,2,300002,Agencia Nacional de Vigilancia Sanitaria,ANVISA
+6,2,300003,Fundacao Oswaldo Cruz,FIOCRUZ
+7,3,360001,Departamento Penitenciario Nacional,DEPEN
+8,3,360002,Policia Federal,PF
+9,4,390001,Conselho Nacional de Desenvolvimento Cientifico e Tecnologico,CNPq
+10,4,390002,Financiadora de Estudos e Projetos,FINEP
+11,5,440001,Instituto Brasileiro do Meio Ambiente e dos Recursos Naturais Renovaveis,IBAMA

@@ -1,0 +1,38 @@
+site_name: Spark + Delta Lake + MinIO - Despesa Pública
+site_description: Projeto de Engenharia de Dados - Pipeline de Despesa Pública com Apache Spark, Delta Lake e MinIO
+site_author: Seu Nome
+repo_url: https://github.com/seu-usuario/spark-delta-minio-despesa
+repo_name: spark-delta-minio-despesa
+
+theme:
+  name: material
+  language: pt
+  palette:
+    primary: green
+    accent: light-green
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - toc.integrate
+    - content.code.copy
+
+nav:
+  - Home: index.md
+  - Setup: setup.md
+  - Notebooks:
+    - "00 - SQL Server": notebooks/00_setup.md
+    - "01 - SQL Server to MinIO": notebooks/01_extracao.md
+    - "02 - CSV to Delta": notebooks/02_delta.md
+    - "03 - DML Delta": notebooks/03_dml.md
+  - Conceitos:
+    - "Delta Lake": conceitos/delta_lake.md
+    - "Tabelas Gerenciadas": conceitos/tabelas.md
+
+markdown_extensions:
+  - admonition
+  - codehilite
+  - pymdownx.superfences
+  - tables
+
+plugins:
+  - search

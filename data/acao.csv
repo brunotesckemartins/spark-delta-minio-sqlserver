@@ -1,0 +1,13 @@
+id_acao,id_programa,codigo_acao,nome_acao
+1,1,20RK,Apoio a Alimentacao Escolar
+2,1,20MJ,Apoio ao Transporte Escolar para a Educacao Basica
+3,2,8535,Atencao a Saude de Povos Indigenas
+4,2,4714,Assistencia Medica e Odontologica aos Servidores
+5,3,20GK,Pesquisa e Desenvolvimento Tecnologico
+6,4,8029,Prevencao da Violencia e Seguranca do Cidadao
+7,5,12364,Fomento a Pos-Graduacao
+8,5,8282,Capacitacao de Recursos Humanos
+9,6,20AD,Vigilancia de Doencas Transmissiveis
+10,7,20QL,Protecao de Ecossistemas
+11,8,8666,Fomento a Pesquisa Cientifica
+12,8,4440,Infraestrutura de Pesquisa

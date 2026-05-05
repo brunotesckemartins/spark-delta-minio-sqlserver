@@ -1,0 +1,16 @@
+id_historico,descricao_item,ano_referencia,valor_medio,quantidade_pesquisada,fonte_pesquisa
+1,Material de Escritorio,2022,1732.47,45,SISG
+2,Material de Escritorio,2023,2460.16,22,ComprasNet
+3,Material de Escritorio,2024,1972.99,39,Painel de Precos
+4,Equipamento de Informatica,2022,600.21,46,Painel de Precos
+5,Equipamento de Informatica,2023,2833.35,25,Painel de Precos
+6,Equipamento de Informatica,2024,1608.39,33,ComprasNet
+7,Servico de Consultoria,2022,2833.51,45,SISG
+8,Servico de Consultoria,2023,938.82,24,Painel de Precos
+9,Servico de Consultoria,2024,1513.5,8,Painel de Precos
+10,Medicamento,2022,1842.37,48,ComprasNet
+11,Medicamento,2023,2454.96,22,ComprasNet
+12,Medicamento,2024,1689.04,48,SISG
+13,Material de Limpeza,2022,395.91,8,ComprasNet
+14,Material de Limpeza,2023,2941.07,23,SISG
+15,Material de Limpeza,2024,2972.01,9,Painel de Precos

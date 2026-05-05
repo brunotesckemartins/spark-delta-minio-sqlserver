@@ -1,0 +1,127 @@
+id_item,id_empenho,descricao_item,quantidade,valor_unitario,valor_total
+1,1,Servico de Consultoria,195,1008.38,196634.1
+2,1,Equipamento de Informatica,118,1249.67,147461.06
+3,1,Equipamento de Informatica,129,3647.86,470573.94
+4,1,Medicamento,481,3123.36,1502336.16
+5,2,Medicamento,370,3069.95,1135881.5
+6,2,Servico de Transporte,406,4510.98,1831457.88
+7,2,Medicamento,422,1946.68,821498.96
+8,2,Servico de Consultoria,78,2312.8,180398.4
+9,3,Equipamento de Informatica,43,4734.83,203597.69
+10,3,Material de Escritorio,241,1588.73,382883.93
+11,3,Livros e Publicacoes,138,2794.18,385596.84
+12,4,Equipamento de Informatica,186,4947.95,920318.7
+13,4,Medicamento,237,2598.09,615747.33
+14,5,Medicamento,27,1794.05,48439.35
+15,5,Servico de Consultoria,488,4604.61,2247049.68
+16,5,Servico de Consultoria,383,3961.28,1517170.24
+17,5,Servico de Consultoria,484,2520.95,1220139.8
+18,6,Mobiliario,57,126.29,7198.53
+19,7,Equipamento de Informatica,42,4684.05,196730.1
+20,7,Material de Escritorio,74,1555.94,115139.56
+21,7,Livros e Publicacoes,196,1655.19,324417.24
+22,7,Material de Escritorio,103,4500.85,463587.55
+23,8,Livros e Publicacoes,227,1295.31,294035.37
+24,8,Servico de Transporte,423,3821.34,1616426.82
+25,9,Servico de Consultoria,473,288.53,136474.69
+26,9,Equipamento de Informatica,312,4706.7,1468490.4
+27,9,Material de Limpeza,50,602.39,30119.5
+28,9,Livros e Publicacoes,90,4955.7,446013.0
+29,10,Servico de Transporte,474,1045.82,495718.68
+30,10,Medicamento,395,2500.68,987768.6
+31,11,Servico de Transporte,61,4290.75,261735.75
+32,11,Material de Limpeza,96,3394.84,325904.64
+33,11,Material de Escritorio,6,2932.61,17595.66
+34,12,Servico de Transporte,111,1891.1,209912.1
+35,12,Livros e Publicacoes,422,4063.74,1714898.28
+36,12,Equipamento de Informatica,213,4070.31,866976.03
+37,13,Servico de Transporte,451,197.59,89113.09
+38,13,Mobiliario,370,4287.14,1586241.8
+39,14,Medicamento,160,4269.37,683099.2
+40,14,Equipamento de Informatica,335,3602.63,1206881.05
+41,15,Medicamento,112,3822.33,428100.96
+42,15,Equipamento de Informatica,197,1488.92,293317.24
+43,15,Material de Limpeza,452,2194.7,992004.4
+44,16,Servico de Transporte,258,1472.22,379832.76
+45,17,Material de Limpeza,274,645.13,176765.62
+46,17,Livros e Publicacoes,221,4409.08,974406.68
+47,17,Servico de Consultoria,496,3294.5,1634072.0
+48,17,Mobiliario,145,1901.0,275645.0
+49,18,Medicamento,195,1690.87,329719.65
+50,18,Servico de Transporte,177,31.51,5577.27
+51,19,Servico de Consultoria,494,4253.77,2101362.38
+52,19,Livros e Publicacoes,405,3203.92,1297587.6
+53,19,Medicamento,381,3765.73,1434743.13
+54,20,Livros e Publicacoes,441,4310.14,1900771.74
+55,20,Medicamento,2,570.54,1141.08
+56,20,Servico de Consultoria,1,2615.28,2615.28
+57,20,Mobiliario,262,3926.51,1028745.62
+58,21,Livros e Publicacoes,136,3745.4,509374.4
+59,21,Material de Limpeza,240,2806.26,673502.4
+60,22,Equipamento de Informatica,379,112.88,42781.52
+61,22,Material de Escritorio,413,1544.43,637849.59
+62,23,Material de Limpeza,214,1505.61,322200.54
+63,24,Livros e Publicacoes,388,509.56,197709.28
+64,24,Material de Limpeza,205,3948.35,809411.75
+65,25,Servico de Consultoria,169,651.06,110029.14
+66,25,Livros e Publicacoes,462,2238.28,1034085.36
+67,25,Servico de Consultoria,215,2813.8,604967.0
+68,25,Material de Limpeza,185,1258.34,232792.9
+69,26,Livros e Publicacoes,294,4223.29,1241647.26
+70,26,Mobiliario,95,4135.06,392830.7
+71,26,Mobiliario,294,4465.72,1312921.68
+72,26,Equipamento de Informatica,341,855.71,291797.11
+73,27,Equipamento de Informatica,236,2620.64,618471.04
+74,27,Equipamento de Informatica,169,3983.36,673187.84
+75,28,Material de Limpeza,336,3671.3,1233556.8
+76,28,Servico de Transporte,325,69.91,22720.75
+77,28,Servico de Consultoria,212,1315.07,278794.84
+78,29,Servico de Transporte,204,190.35,38831.4
+79,30,Servico de Consultoria,285,3780.04,1077311.4
+80,30,Livros e Publicacoes,429,2201.01,944233.29
+81,31,Mobiliario,413,950.5,392556.5
+82,31,Servico de Transporte,88,1371.28,120672.64
+83,32,Servico de Consultoria,287,4594.85,1318721.95
+84,33,Equipamento de Informatica,335,4800.2,1608067.0
+85,33,Servico de Consultoria,381,3392.59,1292576.79
+86,33,Equipamento de Informatica,423,693.4,293308.2
+87,34,Livros e Publicacoes,389,2568.54,999162.06
+88,35,Medicamento,182,4355.65,792728.3
+89,35,Servico de Consultoria,315,3045.24,959250.6
+90,36,Servico de Transporte,396,273.53,108317.88
+91,36,Medicamento,415,3129.06,1298559.9
+92,36,Equipamento de Informatica,158,906.08,143160.64
+93,37,Material de Escritorio,255,3218.08,820610.4
+94,37,Equipamento de Informatica,119,1890.42,224959.98
+95,38,Equipamento de Informatica,291,2224.81,647419.71
+96,38,Servico de Consultoria,449,4088.16,1835583.84
+97,39,Material de Escritorio,192,1272.48,244316.16
+98,39,Material de Limpeza,300,1988.67,596601.0
+99,39,Material de Escritorio,486,802.55,390039.3
+100,39,Material de Limpeza,452,1435.36,648782.72
+101,40,Equipamento de Informatica,64,2467.29,157906.56
+102,40,Servico de Transporte,21,1775.17,37278.57
+103,40,Servico de Transporte,434,1679.33,728829.22
+104,41,Medicamento,193,4071.31,785762.83
+105,42,Material de Limpeza,356,3375.17,1201560.52
+106,42,Medicamento,379,2003.72,759409.88
+107,43,Material de Escritorio,269,2037.34,548044.46
+108,43,Material de Limpeza,109,1216.41,132588.69
+109,44,Livros e Publicacoes,432,2840.23,1226979.36
+110,44,Material de Escritorio,3,2832.15,8496.45
+111,45,Servico de Consultoria,68,4503.85,306261.8
+112,45,Material de Limpeza,323,1509.35,487520.05
+113,46,Servico de Consultoria,297,3823.36,1135537.92
+114,46,Material de Escritorio,2,4664.01,9328.02
+115,47,Mobiliario,480,4958.79,2380219.2
+116,47,Medicamento,38,836.52,31787.76
+117,47,Mobiliario,175,2178.98,381321.5
+118,47,Servico de Transporte,470,3064.99,1440545.3
+119,48,Mobiliario,120,3670.84,440500.8
+120,48,Equipamento de Informatica,107,3580.19,383080.33
+121,49,Servico de Consultoria,314,1016.36,319137.04
+122,49,Medicamento,69,2382.33,164380.77
+123,49,Material de Limpeza,89,4206.1,374342.9
+124,49,Equipamento de Informatica,86,3260.85,280433.1
+125,50,Livros e Publicacoes,124,2627.21,325774.04
+126,50,Equipamento de Informatica,203,2626.62,533203.86

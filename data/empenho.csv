@@ -1,0 +1,51 @@
+id_empenho,numero_empenho,id_unidade,id_acao,id_fonte,id_credor,data_empenho,valor_empenho,tipo_empenho,modalidade_licitacao,situacao,descricao
+1,2024NE000001,4,8,4,14,2023-07-16,1177278.04,Global,Dispensa,Normal,Empenho referente a execucao de servicos item 1
+2,2024NE000002,6,1,4,14,2024-06-03,537493.52,Ordinario,Inexigibilidade,Anulado,Empenho referente a execucao de servicos item 2
+3,2024NE000003,8,3,6,5,2024-05-27,1366181.45,Estimativo,Inexigibilidade,Normal,Empenho referente a execucao de servicos item 3
+4,2024NE000004,1,10,1,4,2024-04-15,1245987.3,Ordinario,Dispensa,Anulado,Empenho referente a execucao de servicos item 4
+5,2024NE000005,8,7,4,2,2024-04-11,1350045.41,Estimativo,Inexigibilidade,Reforcado,Empenho referente a execucao de servicos item 5
+6,2024NE000006,1,8,3,14,2023-04-14,514829.3,Estimativo,Pregao Eletronico,Reforcado,Empenho referente a execucao de servicos item 6
+7,2024NE000007,6,10,2,2,2023-03-13,1156109.18,Ordinario,Concorrencia,Normal,Empenho referente a execucao de servicos item 7
+8,2024NE000008,8,4,6,5,2023-06-14,1942448.93,Ordinario,Dispensa,Normal,Empenho referente a execucao de servicos item 8
+9,2024NE000009,11,3,2,8,2024-08-10,371628.72,Global,Inexigibilidade,Anulado,Empenho referente a execucao de servicos item 9
+10,2024NE000010,6,6,2,2,2023-01-18,1439517.74,Global,Concorrencia,Anulado,Empenho referente a execucao de servicos item 10
+11,2024NE000011,4,12,5,15,2023-07-28,1016732.54,Global,Concorrencia,Reforcado,Empenho referente a execucao de servicos item 11
+12,2024NE000012,8,7,2,7,2024-02-06,1004302.93,Estimativo,Inexigibilidade,Reforcado,Empenho referente a execucao de servicos item 12
+13,2024NE000013,8,2,4,14,2024-08-23,373303.06,Ordinario,Pregao Eletronico,Anulado,Empenho referente a execucao de servicos item 13
+14,2024NE000014,2,10,4,14,2023-01-12,230849.64,Global,Dispensa,Anulado,Empenho referente a execucao de servicos item 14
+15,2024NE000015,5,12,4,7,2024-09-15,719297.24,Global,Dispensa,Reforcado,Empenho referente a execucao de servicos item 15
+16,2024NE000016,4,11,5,10,2023-06-20,114154.19,Estimativo,Concorrencia,Normal,Empenho referente a execucao de servicos item 16
+17,2024NE000017,4,12,3,15,2023-05-14,1709868.57,Ordinario,Pregao Eletronico,Reforcado,Empenho referente a execucao de servicos item 17
+18,2024NE000018,3,6,5,7,2023-05-06,1356502.57,Ordinario,Inexigibilidade,Normal,Empenho referente a execucao de servicos item 18
+19,2024NE000019,2,11,3,15,2023-10-07,882155.48,Global,Concorrencia,Anulado,Empenho referente a execucao de servicos item 19
+20,2024NE000020,11,11,1,4,2023-05-20,760434.82,Global,Concorrencia,Anulado,Empenho referente a execucao de servicos item 20
+21,2024NE000021,2,1,3,5,2023-02-25,875860.28,Global,Concorrencia,Anulado,Empenho referente a execucao de servicos item 21
+22,2024NE000022,5,9,4,9,2023-11-24,600844.97,Global,Concorrencia,Anulado,Empenho referente a execucao de servicos item 22
+23,2024NE000023,8,8,5,8,2024-06-24,590268.49,Ordinario,Inexigibilidade,Reforcado,Empenho referente a execucao de servicos item 23
+24,2024NE000024,10,2,5,14,2024-03-20,1985081.35,Estimativo,Inexigibilidade,Normal,Empenho referente a execucao de servicos item 24
+25,2024NE000025,7,10,3,5,2024-11-11,194044.24,Estimativo,Dispensa,Normal,Empenho referente a execucao de servicos item 25
+26,2024NE000026,1,4,5,12,2023-05-04,1134407.83,Ordinario,Concorrencia,Normal,Empenho referente a execucao de servicos item 26
+27,2024NE000027,6,10,2,9,2024-10-01,815334.13,Estimativo,Inexigibilidade,Normal,Empenho referente a execucao de servicos item 27
+28,2024NE000028,7,6,5,11,2023-01-19,763634.57,Ordinario,Dispensa,Normal,Empenho referente a execucao de servicos item 28
+29,2024NE000029,9,9,3,2,2024-03-01,1459677.67,Global,Concorrencia,Reforcado,Empenho referente a execucao de servicos item 29
+30,2024NE000030,8,12,4,10,2024-01-05,1851750.53,Global,Concorrencia,Reforcado,Empenho referente a execucao de servicos item 30
+31,2024NE000031,6,9,5,8,2023-06-27,875980.01,Global,Dispensa,Normal,Empenho referente a execucao de servicos item 31
+32,2024NE000032,3,11,6,4,2024-11-05,130620.28,Estimativo,Concorrencia,Anulado,Empenho referente a execucao de servicos item 32
+33,2024NE000033,5,4,1,10,2024-01-20,151083.57,Ordinario,Pregao Eletronico,Reforcado,Empenho referente a execucao de servicos item 33
+34,2024NE000034,1,7,5,13,2024-03-10,1897400.45,Global,Pregao Eletronico,Anulado,Empenho referente a execucao de servicos item 34
+35,2024NE000035,8,6,1,3,2023-08-06,378336.24,Ordinario,Concorrencia,Normal,Empenho referente a execucao de servicos item 35
+36,2024NE000036,2,4,1,7,2024-02-13,1921490.48,Estimativo,Inexigibilidade,Reforcado,Empenho referente a execucao de servicos item 36
+37,2024NE000037,2,6,5,10,2024-09-21,1706304.89,Global,Dispensa,Reforcado,Empenho referente a execucao de servicos item 37
+38,2024NE000038,11,7,6,4,2024-01-22,358204.52,Ordinario,Concorrencia,Normal,Empenho referente a execucao de servicos item 38
+39,2024NE000039,2,4,5,14,2024-10-07,610271.54,Estimativo,Pregao Eletronico,Normal,Empenho referente a execucao de servicos item 39
+40,2024NE000040,7,6,2,12,2024-01-01,1323634.35,Ordinario,Inexigibilidade,Anulado,Empenho referente a execucao de servicos item 40
+41,2024NE000041,5,4,2,15,2024-03-01,450859.42,Ordinario,Concorrencia,Reforcado,Empenho referente a execucao de servicos item 41
+42,2024NE000042,1,2,1,14,2024-09-25,110636.82,Ordinario,Dispensa,Normal,Empenho referente a execucao de servicos item 42
+43,2024NE000043,11,3,5,7,2024-02-01,1341016.53,Ordinario,Dispensa,Normal,Empenho referente a execucao de servicos item 43
+44,2024NE000044,3,1,4,11,2024-10-15,937778.64,Global,Concorrencia,Reforcado,Empenho referente a execucao de servicos item 44
+45,2024NE000045,5,3,1,8,2024-11-03,321134.02,Ordinario,Dispensa,Anulado,Empenho referente a execucao de servicos item 45
+46,2024NE000046,2,9,1,5,2023-09-10,324535.73,Estimativo,Inexigibilidade,Normal,Empenho referente a execucao de servicos item 46
+47,2024NE000047,9,3,6,1,2024-11-25,1059071.78,Estimativo,Pregao Eletronico,Reforcado,Empenho referente a execucao de servicos item 47
+48,2024NE000048,4,3,3,14,2023-11-07,1094373.22,Estimativo,Concorrencia,Normal,Empenho referente a execucao de servicos item 48
+49,2024NE000049,2,8,3,8,2023-06-17,1355239.84,Global,Dispensa,Reforcado,Empenho referente a execucao de servicos item 49
+50,2024NE000050,8,11,6,14,2023-01-13,1238108.59,Ordinario,Inexigibilidade,Reforcado,Empenho referente a execucao de servicos item 50
