@@ -218,11 +218,12 @@ Execute os arquivos na pasta `notebook/` seguindo a ordem lógica do pipeline:
 
 ## Login MInIO
 
-acesse o MinIO em : 
-localhost:9021
+Acesse o MinIO em : 
+http://localhost:9021
 
 login : minioadmin
 senha : minioadmin
+
 ---
 
 ## Tecnologias Utilizadas
