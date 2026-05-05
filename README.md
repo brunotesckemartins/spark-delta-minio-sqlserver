@@ -162,6 +162,8 @@ newgrp docker
 git clone [https://github.com/brunotesckemartins/spark-delta-minio-despesa.git](https://github.com/brunotesckemartins/spark-delta-minio-despesa.git)
 cd spark-delta-minio-despesa
 ```
+### 1.1
+Copie o .env.example e cole o conteúdo dele em .env(crie na raiz do projeto)
 
 ### 2. Subir os containers
 
@@ -214,6 +216,13 @@ Execute os arquivos na pasta `notebook/` seguindo a ordem lógica do pipeline:
 | SQL Server | `sa` | `SqlServer@2024!` |
 | MinIO | `minioadmin` | `minioadmin` |
 
+## Login MInIO
+
+acesse o MinIO em : 
+localhost:9021
+
+login : minioadmin
+senha : minioadmin
 ---
 
 ## Tecnologias Utilizadas
