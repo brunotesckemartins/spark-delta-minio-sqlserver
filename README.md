@@ -21,13 +21,13 @@ Implementa um pipeline completo de dados com o tema de **Administração - Despe
                                                                Notebooks 02 e 03
 ```
 
-> **Sem ODBC.** Toda comunicação com o SQL Server é feita via **JDBC** pelo PySpark[cite: 3, 4]. O driver JDBC é baixado automaticamente pelo Spark via Maven Central[cite: 3, 4]. Nenhuma instalação de driver nativo no sistema operacional é necessária[cite: 3, 4].
+> **Sem ODBC.** Toda comunicação com o SQL Server é feita via **JDBC** pelo PySpark. O driver JDBC é baixado automaticamente pelo Spark via Maven Central. Nenhuma instalação de driver nativo no sistema operacional é necessária.
 
 ---
 
 ## Dataset: DespesaPublicaDB
 
-Banco relacional com **11 tabelas** modelando o ciclo completo de execução orçamentária federal[cite: 3]:
+Banco relacional com **11 tabelas** modelando o ciclo completo de execução orçamentária federal:
 
 | Tabela | Descrição | Registros |
 |--------|-----------|:---------:|
@@ -171,8 +171,8 @@ docker compose up -d
 
 | Container | Imagem | Portas |
 |-----------|--------|--------|
-| `sqlserver-despesa` | `mcr.microsoft.com/mssql/server:2022-latest` | `1433`[cite: 3] |
-| `minio-despesa` | `minio/minio` (Feb 2025) | `9020` (API), `9021` (Console)[cite: 4] |
+| `sqlserver-despesa` | `mcr.microsoft.com/mssql/server:2022-latest` | `1433` |
+| `minio-despesa` | `minio/minio` (Feb 2025) | `9020` (API), `9021` (Console) |
 
 ### 3. Ambiente virtual e dependências
 
@@ -196,14 +196,14 @@ Acesse [http://127.0.0.1:8000](http://127.0.0.1:8000).
 
 ## Execução dos Notebooks
 
-Execute os arquivos na pasta `notebook/` seguindo a ordem lógica do pipeline[cite: 3, 4, 5, 6]:
+Execute os arquivos na pasta `notebook/` seguindo a ordem lógica do pipeline:
 
 | # | Notebook | Função |
 |---|----------|-----------|
-| 0 | `00_setup_sqlserver.ipynb` | Criação do banco, tabelas e carga JDBC inicial[cite: 3] |
+| 0 | `00_setup_sqlserver.ipynb` | Criação do banco, tabelas e carga JDBC inicial |
 | 1 | `01_sqlserver_to_minio_csv.ipynb` | Extração do SQL Server para CSV no MinIO (Landing Zone)[cite: 4] |
-| 2 | `02_csv_to_delta.ipynb` | Refinamento: CSV para Delta Lake (Bronze Zone)[cite: 5] |
-| 3 | `03_dml_delta.ipynb` | Operações transacionais, History e Time Travel no Delta[cite: 6] |
+| 2 | `02_csv_to_delta.ipynb` | Refinamento: CSV para Delta Lake (Bronze Zone) |
+| 3 | `03_dml_delta.ipynb` | Operações transacionais, History e Time Travel no Delta |
 
 ---
 
@@ -211,8 +211,8 @@ Execute os arquivos na pasta `notebook/` seguindo a ordem lógica do pipeline[ci
 
 | Serviço | Usuário | Senha |
 |---------|---------|-------|
-| SQL Server | `sa` | `SqlServer@2024!`[cite: 3] |
-| MinIO | `minioadmin` | `minioadmin`[cite: 4] |
+| SQL Server | `sa` | `SqlServer@2024!` |
+| MinIO | `minioadmin` | `minioadmin` |
 
 ---
 
@@ -220,10 +220,10 @@ Execute os arquivos na pasta `notebook/` seguindo a ordem lógica do pipeline[ci
 
 | Tecnologia | Papel |
 |------------|-------|
-| Apache Spark | Processamento distribuído[cite: 3, 4, 5] |
-| Delta Lake | Camada de armazenamento ACID[cite: 5, 6] |
-| MinIO | Object Storage S3-Compatible[cite: 4, 5] |
-| SQL Server | Banco de dados transacional de origem[cite: 3, 4] |
+| Apache Spark | Processamento distribuído |
+| Delta Lake | Camada de armazenamento ACID |
+| MinIO | Object Storage S3-Compatible |
+| SQL Server | Banco de dados transacional de origem |
 | UV | Gerenciamento de ambiente e pacotes Python |
 | MkDocs | Documentação técnica do projeto |
 
@@ -231,7 +231,7 @@ Execute os arquivos na pasta `notebook/` seguindo a ordem lógica do pipeline[ci
 
 ## Tabelas Gerenciadas vs Não Gerenciadas
 
-Este projeto utiliza **Tabelas Não Gerenciadas**[cite: 5, 6]:
-* **Dados**: Armazenados no MinIO (`s3a://bronze/`)[cite: 5].
-* **Metadados**: Gerenciados pelo Spark Catalog[cite: 5].
-* **DROP TABLE**: Remove apenas o registro no catálogo; os arquivos físicos permanecem seguros no MinIO[cite: 5, 6].
+Este projeto utiliza **Tabelas Não Gerenciadas**:
+* **Dados**: Armazenados no MinIO (`s3a://bronze/`).
+* **Metadados**: Gerenciados pelo Spark Catalog.
+* **DROP TABLE**: Remove apenas o registro no catálogo; os arquivos físicos permanecem seguros no MinIO.
