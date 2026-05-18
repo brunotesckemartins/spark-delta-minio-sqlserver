@@ -238,6 +238,24 @@ Para parar os serviços e remover os containers, preservando as configurações:
 ```bash
 docker compose down
 ```
+## Referências e Links Úteis
+
+* **Origem dos Dados:**
+  * [Portal de Dados Abertos do Governo Federal - Despesa Pública](https://dados.gov.br/dados/conjuntos-dados/administracao---despesa-publica---empenhos)
+
+* **Processamento e Armazenamento (Lakehouse):**
+  * [Apache Spark - Documentação Oficial](https://spark.apache.org/docs/latest/)
+  * [Delta Lake - Guia Oficial e Referência de API](https://docs.delta.io/latest/index.html)
+  * [MinIO Object Storage - Documentação](https://min.io/docs/minio/linux/index.html)
+
+* **Banco de Dados e Conectividade:**
+  * [Microsoft SQL Server - Imagem Oficial Docker](https://hub.docker.com/_/microsoft-mssql-server)
+  * [Microsoft JDBC Driver for SQL Server](https://learn.microsoft.com/pt-br/sql/connect/jdbc/microsoft-jdbc-driver-for-sql-server)
+
+* **Ferramentas de Desenvolvimento e Infraestrutura:**
+  * [uv - Fast Python Package Manager](https://docs.astral.sh/uv/)
+  * [Docker Compose - Overview](https://docs.docker.com/compose/)
+  * [MkDocs Material - Guia de Configuração](https://squidfunk.github.io/mkdocs-material/)
 
 Para remover também os volumes (excluindo os bancos de dados criados e os buckets do MinIO):
 ```bash
