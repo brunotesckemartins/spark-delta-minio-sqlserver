@@ -76,7 +76,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#01-ingestao-para-landing-zone-minio" class="md-skip">
+        <a href="#01-extracao-e-ingestao-para-a-landing-zone-minio" class="md-skip">
           Ir para o conteúdo
         </a>
       
@@ -522,10 +522,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#configuracao-do-spark" class="md-nav__link">
+  <a href="#arquitetura-de-ingestao" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Configuração do Spark
+        Arquitetura de Ingestão
       
     </span>
   </a>
@@ -533,10 +533,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#extracao-via-pyspark" class="md-nav__link">
+  <a href="#configuracao-do-spark-para-s3minio" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Extração via PySpark
+        Configuração do Spark para S3/MinIO
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#extracao-de-dados-full-load" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Extração de Dados (Full Load)
       
     </span>
   </a>
@@ -750,11 +761,29 @@
   
 
 
-<h1 id="01-ingestao-para-landing-zone-minio">01 - Ingestão para Landing Zone (MinIO)</h1>
-<p>A fase de ingestão bruta. Retiramos os dados do banco relacional e os movemos para o armazenamento em nuvem no bucket <code>landing-zone</code>.</p>
-<h2 id="configuracao-do-spark">Configuração do Spark</h2>
-<p>Nesta etapa, o PySpark necessita dos drivers do SQL Server e das bibliotecas do AWS S3 (<code>hadoop-aws</code>) para a comunicação unificada.</p>
-<div class="highlight"><pre><span></span><code><span class="n">spark</span> <span class="o">=</span> <span class="p">(</span>
+<h1 id="01-extracao-e-ingestao-para-a-landing-zone-minio">01 - Extração e Ingestão para a Landing Zone (MinIO)</h1>
+<p>Esta etapa representa a fase de ingestão bruta (Raw Data) do nosso pipeline. O objetivo é extrair os dados do banco relacional de origem (SQL Server) e persistí-los de forma imutável no armazenamento em nuvem, especificamente no bucket <code>landing-zone</code> do MinIO.</p>
+<hr />
+<h2 id="arquitetura-de-ingestao">Arquitetura de Ingestão</h2>
+<p>O diagrama abaixo detalha o tráfego de dados. O Apache Spark atua como o motor de orquestração, extraindo as informações via protocolo JDBC e escrevendo os arquivos brutos via API S3:</p>
+<div class="highlight"><pre><span></span><code>graph LR
+    A[(SQL Server 2022&lt;br&gt;DespesaPublicaDB)] --&gt;|Leitura JDBC| B(Apache Spark&lt;br&gt;DataFrame)
+    B --&gt;|Escrita S3A/CSV| C[(MinIO Storage&lt;br&gt;Bucket: landing-zone)]
+
+    style A fill:#CC292B,stroke:#333,stroke-width:2px,color:#fff
+    style C fill:#C7202C,stroke:#333,stroke-width:2px,color:#fff
+</code></pre></div>
+<hr />
+<h2 id="configuracao-do-spark-para-s3minio">Configuração do Spark para S3/MinIO</h2>
+<p>Nesta etapa, o PySpark necessita não apenas do driver do SQL Server, mas também das bibliotecas do ecossistema Hadoop-AWS para habilitar a comunicação com o MinIO, que é 100% compatível com a API do Amazon S3.</p>
+<div class="admonition info">
+<p class="admonition-title">Acesso no Estilo de Caminho (Path Style Access)</p>
+<p>A configuração <code>spark.hadoop.fs.s3a.path.style.access</code> definida como <code>true</code> é crucial para o funcionamento do MinIO. Diferente da AWS, que utiliza URLs baseadas em subdomínios (ex: <code>bucket.s3.amazonaws.com</code>), as instâncias locais do MinIO operam com a estrutura de caminhos diretamente na URL (ex: <code>localhost:9020/bucket</code>).</p>
+</div>
+<p><strong>Script de Inicialização da Sessão:</strong>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">pyspark.sql</span><span class="w"> </span><span class="kn">import</span> <span class="n">SparkSession</span>
+
+<span class="n">spark</span> <span class="o">=</span> <span class="p">(</span>
     <span class="n">SparkSession</span><span class="o">.</span><span class="n">builder</span>
     <span class="o">.</span><span class="n">appName</span><span class="p">(</span><span class="s1">&#39;DespesaPublica-01-SQLServer-to-MinIO&#39;</span><span class="p">)</span>
     <span class="o">.</span><span class="n">config</span><span class="p">(</span>
@@ -763,20 +792,34 @@
         <span class="s1">&#39;org.apache.hadoop:hadoop-aws:3.3.4,&#39;</span>
         <span class="s1">&#39;com.amazonaws:aws-java-sdk-bundle:1.12.367&#39;</span>
     <span class="p">)</span>
-    <span class="o">.</span><span class="n">config</span><span class="p">(</span><span class="s1">&#39;spark.hadoop.fs.s3a.endpoint&#39;</span><span class="p">,</span>          <span class="n">MINIO_ENDPOINT</span><span class="p">)</span>
-    <span class="o">.</span><span class="n">config</span><span class="p">(</span><span class="s1">&#39;spark.hadoop.fs.s3a.access.key&#39;</span><span class="p">,</span>        <span class="n">MINIO_ACCESS_KEY</span><span class="p">)</span>
-    <span class="o">.</span><span class="n">config</span><span class="p">(</span><span class="s1">&#39;spark.hadoop.fs.s3a.secret.key&#39;</span><span class="p">,</span>        <span class="n">MINIO_SECRET_KEY</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">config</span><span class="p">(</span><span class="s1">&#39;spark.hadoop.fs.s3a.endpoint&#39;</span><span class="p">,</span>         <span class="n">MINIO_ENDPOINT</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">config</span><span class="p">(</span><span class="s1">&#39;spark.hadoop.fs.s3a.access.key&#39;</span><span class="p">,</span>       <span class="n">MINIO_ACCESS_KEY</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">config</span><span class="p">(</span><span class="s1">&#39;spark.hadoop.fs.s3a.secret.key&#39;</span><span class="p">,</span>       <span class="n">MINIO_SECRET_KEY</span><span class="p">)</span>
     <span class="o">.</span><span class="n">config</span><span class="p">(</span><span class="s1">&#39;spark.hadoop.fs.s3a.path.style.access&#39;</span><span class="p">,</span> <span class="s1">&#39;true&#39;</span><span class="p">)</span>
     <span class="o">.</span><span class="n">config</span><span class="p">(</span><span class="s1">&#39;spark.hadoop.fs.s3a.impl&#39;</span><span class="p">,</span> <span class="s1">&#39;org.apache.hadoop.fs.s3a.S3AFileSystem&#39;</span><span class="p">)</span>
     <span class="o">.</span><span class="n">getOrCreate</span><span class="p">()</span>
 <span class="p">)</span>
-</code></pre></div>
-<h2 id="extracao-via-pyspark">Extração via PySpark</h2>
-<p>Usamos a função <code>coalesce(1)</code> para forçar o Spark a gravar cada tabela em um único arquivo CSV, facilitando a governança na zona de pouso.</p>
+</code></pre></div></p>
+<hr />
+<h2 id="extracao-de-dados-full-load">Extração de Dados (Full Load)</h2>
+<p>O processo iterativo conecta no banco de dados, extrai o conteúdo integral de cada tabela listada e o salva no MinIO no formato CSV.</p>
+<div class="admonition warning">
+<p class="admonition-title">Governança e o uso do Coalesce</p>
+<p>Utilizamos a função <code>.coalesce(1)</code> estrategicamente nesta fase. O Spark, por ser distribuído nativamente, tende a salvar os resultados em múltiplas partições (vários pequenos arquivos CSV). Para a <em>Landing Zone</em>, onde buscamos uma cópia exata 1:1 da tabela de origem para facilitar a governança, forçamos a consolidação dos dados em um único arquivo de saída. Cabe ressaltar que isso pode causar gargalos de performance em cenários de Big Data massivo, mas atende perfeitamente ao escopo transacional deste projeto.</p>
+</div>
+<p><strong>Script de Extração e Persistência:</strong>
 <div class="highlight"><pre><span></span><code><span class="k">for</span> <span class="n">tabela</span> <span class="ow">in</span> <span class="n">TABELAS</span><span class="p">:</span>
-    <span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">read</span><span class="o">.</span><span class="n">jdbc</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="n">JDBC_URL</span><span class="p">,</span> <span class="n">table</span><span class="o">=</span><span class="n">tabela</span><span class="p">,</span> <span class="n">properties</span><span class="o">=</span><span class="n">JDBC_PROPS</span><span class="p">)</span>
+    <span class="c1"># 1. Leitura integral da origem via JDBC</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">read</span><span class="o">.</span><span class="n">jdbc</span><span class="p">(</span>
+        <span class="n">url</span><span class="o">=</span><span class="n">JDBC_URL</span><span class="p">,</span> 
+        <span class="n">table</span><span class="o">=</span><span class="n">tabela</span><span class="p">,</span> 
+        <span class="n">properties</span><span class="o">=</span><span class="n">JDBC_PROPS</span>
+    <span class="p">)</span>
 
+    <span class="c1"># 2. Definição do caminho de destino no padrão S3A</span>
     <span class="n">csv_path</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;s3a://</span><span class="si">{</span><span class="n">BUCKET_LANDING</span><span class="si">}</span><span class="s1">/</span><span class="si">{</span><span class="n">tabela</span><span class="si">}</span><span class="s1">&#39;</span>
+
+    <span class="c1"># 3. Gravação forçada em arquivo único no MinIO</span>
     <span class="p">(</span>
         <span class="n">df</span><span class="o">.</span><span class="n">coalesce</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
         <span class="o">.</span><span class="n">write</span>
@@ -784,7 +827,9 @@
         <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s1">&#39;header&#39;</span><span class="p">,</span> <span class="s1">&#39;true&#39;</span><span class="p">)</span>
         <span class="o">.</span><span class="n">csv</span><span class="p">(</span><span class="n">csv_path</span><span class="p">)</span>
     <span class="p">)</span>
-</code></pre></div>
+
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Tabela &#39;</span><span class="si">{</span><span class="n">tabela</span><span class="si">}</span><span class="s2">&#39; extraída e salva com sucesso na Landing Zone.&quot;</span><span class="p">)</span>
+</code></pre></div></p>
 
 
 

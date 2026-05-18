@@ -76,7 +76,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#03-manipulacao-de-dados-dml-no-delta-lake" class="md-skip">
+        <a href="#03-manipulacao-transacional-dml-no-delta-lake" class="md-skip">
           Ir para o conteúdo
         </a>
       
@@ -578,13 +578,30 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#insercao-com-merge-idempotencia" class="md-nav__link">
+  <a href="#insercao-e-atualizacao-com-merge-upsert" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Inserção com MERGE (Idempotência)
+        Inserção e Atualização com MERGE (Upsert)
       
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="Inserção e Atualização com MERGE (Upsert)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#logica-de-execucao-do-merge" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Lógica de Execução do MERGE
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -761,32 +778,72 @@
   
 
 
-<h1 id="03-manipulacao-de-dados-dml-no-delta-lake">03 - Manipulação de Dados (DML) no Delta Lake</h1>
-<p>Demonstramos a capacidade transacional do ambiente gravado no bucket <code>bronze</code>, operando diretamente sobre os arquivos através de rotinas DML (Data Manipulation Language).</p>
-<h2 id="insercao-com-merge-idempotencia">Inserção com MERGE (Idempotência)</h2>
-<p>Utilizamos a API <code>DeltaTable</code> para processar um <code>merge</code>, assegurando que registros não sejam duplicados na tabela de fornecedores/credores.</p>
-<div class="highlight"><pre><span></span><code><span class="n">dt_credor</span> <span class="o">=</span> <span class="n">DeltaTable</span><span class="o">.</span><span class="n">forPath</span><span class="p">(</span><span class="n">spark</span><span class="p">,</span> <span class="n">bronze</span><span class="p">(</span><span class="s1">&#39;credor&#39;</span><span class="p">))</span>
+<h1 id="03-manipulacao-transacional-dml-no-delta-lake">03 - Manipulação Transacional (DML) no Delta Lake</h1>
+<p>Historicamente, repositórios de dados como o Hadoop ou o Amazon S3 eram imutáveis ou <em>append-only</em> (apenas inserção). Atualizar ou deletar uma linha específica exigia a reescrita completa de arquivos gigantescos. </p>
+<p>Nesta etapa, demonstramos o poder do paradigma <strong>Lakehouse</strong>: a capacidade de executar operações DML (Data Manipulation Language) granulares e com garantias ACID diretamente sobre os arquivos no bucket <code>bronze</code>, sem a necessidade de um banco de dados relacional intermediário.</p>
+<hr />
+<h2 id="insercao-e-atualizacao-com-merge-upsert">Inserção e Atualização com MERGE (Upsert)</h2>
+<p>A operação de <code>MERGE</code> é fundamental para pipelines modernos de engenharia de dados. Ela permite cruzar um DataFrame de origem (novos dados) com a Tabela Delta de destino, executando atualizações ou inserções com base em uma condição de correspondência (Match).</p>
+<h3 id="logica-de-execucao-do-merge">Lógica de Execução do MERGE</h3>
+<p>O diagrama abaixo ilustra o comportamento de avaliação registro a registro durante a transação:</p>
+<div class="highlight"><pre><span></span><code>graph TD
+    A[Dados Novos&lt;br&gt;DataFrame Origem] --&gt; B{A chave existe na&lt;br&gt;Tabela Destino?}
+    B --&gt;|Sim| C[Ação: whenMatched&lt;br&gt;Atualiza o Registro]
+    B --&gt;|Não| D[Ação: whenNotMatched&lt;br&gt;Insere o Novo Registro]
+    C --&gt; E[(Delta Lake&lt;br&gt;MinIO Storage)]
+    D --&gt; E
+
+    style E fill:#00AEEF,stroke:#333,stroke-width:2px,color:#fff
+</code></pre></div>
+<div class="admonition success">
+<p class="admonition-title">Garantia de Idempotência</p>
+<p>No exemplo abaixo, utilizamos o <code>MERGE</code> para inserir novos fornecedores/credores no sistema de despesas públicas. Se o pipeline for executado múltiplas vezes por acidente, a condição <code>dst.id_credor = src.id_credor</code> garantirá que os credores existentes não sejam duplicados, mantendo a integridade da base.</p>
+</div>
+<p><strong>Script de Merge (Apenas Inserção):</strong>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">delta.tables</span><span class="w"> </span><span class="kn">import</span> <span class="n">DeltaTable</span>
+
+<span class="c1"># Conecta na tabela física gerenciada no MinIO</span>
+<span class="n">dt_credor</span> <span class="o">=</span> <span class="n">DeltaTable</span><span class="o">.</span><span class="n">forPath</span><span class="p">(</span><span class="n">spark</span><span class="p">,</span> <span class="n">bronze</span><span class="p">(</span><span class="s1">&#39;credor&#39;</span><span class="p">))</span>
 
 <span class="p">(</span>
     <span class="n">dt_credor</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s1">&#39;dst&#39;</span><span class="p">)</span>
-    <span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">novos</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s1">&#39;src&#39;</span><span class="p">),</span> <span class="s1">&#39;dst.id_credor = src.id_credor&#39;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">merge</span><span class="p">(</span>
+        <span class="n">source</span> <span class="o">=</span> <span class="n">novos</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s1">&#39;src&#39;</span><span class="p">),</span> 
+        <span class="n">condition</span> <span class="o">=</span> <span class="s1">&#39;dst.id_credor = src.id_credor&#39;</span>
+    <span class="p">)</span>
     <span class="o">.</span><span class="n">whenNotMatchedInsertAll</span><span class="p">()</span>
     <span class="o">.</span><span class="n">execute</span><span class="p">()</span>
 <span class="p">)</span>
-</code></pre></div>
+</code></pre></div></p>
+<hr />
 <h2 id="atualizacao-de-dados-update">Atualização de Dados (UPDATE)</h2>
-<p>Atualizamos a coluna <code>municipio</code> dos credores de São Paulo diretamente no Data Lake.</p>
-<div class="highlight"><pre><span></span><code><span class="n">dt_credor</span> <span class="o">=</span> <span class="n">DeltaTable</span><span class="o">.</span><span class="n">forPath</span><span class="p">(</span><span class="n">spark</span><span class="p">,</span> <span class="n">bronze</span><span class="p">(</span><span class="s1">&#39;credor&#39;</span><span class="p">))</span>
+<p>O Delta Lake permite atualizar valores em massa utilizando a API Python de forma muito semelhante a uma instrução SQL <code>UPDATE ... SET ... WHERE</code>. </p>
+<p>No cenário abaixo, estamos normalizando os dados cadastrais, anexando o sufixo "- Capital" aos municípios dos credores localizados no estado de São Paulo.</p>
+<p><strong>Script de Atualização:</strong>
+<div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">pyspark.sql.functions</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">F</span>
+
+<span class="n">dt_credor</span> <span class="o">=</span> <span class="n">DeltaTable</span><span class="o">.</span><span class="n">forPath</span><span class="p">(</span><span class="n">spark</span><span class="p">,</span> <span class="n">bronze</span><span class="p">(</span><span class="s1">&#39;credor&#39;</span><span class="p">))</span>
+
 <span class="n">dt_credor</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
     <span class="n">condition</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s1">&#39;uf&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s1">&#39;SP&#39;</span><span class="p">,</span>
-    <span class="nb">set</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;municipio&#39;</span><span class="p">:</span> <span class="n">F</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s1">&#39;municipio&#39;</span><span class="p">),</span> <span class="n">F</span><span class="o">.</span><span class="n">lit</span><span class="p">(</span><span class="s1">&#39; - Capital&#39;</span><span class="p">))}</span>
+    <span class="nb">set</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;municipio&#39;</span><span class="p">:</span> <span class="n">F</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s1">&#39;municipio&#39;</span><span class="p">),</span> <span class="n">F</span><span class="o">.</span><span class="n">lit</span><span class="p">(</span><span class="s1">&#39; - Capital&#39;</span><span class="p">))</span>
+    <span class="p">}</span>
 <span class="p">)</span>
-</code></pre></div>
+</code></pre></div></p>
+<hr />
 <h2 id="exclusao-de-registros-delete">Exclusão de Registros (DELETE)</h2>
-<p>Exclusão transacional que remove pagamentos marcados como 'Cancelado'. O histórico dessa ação é preservado nos logs do Delta.</p>
+<p>A exclusão transacional remove registros que atendem a um critério específico. No contexto governamental, podemos utilizar essa funcionalidade para expurgar registros de pagamentos com status 'Cancelado' das tabelas ativas de relatórios.</p>
+<div class="admonition warning">
+<p class="admonition-title">Delete Lógico vs. Físico</p>
+<p>A execução do método <code>.delete()</code> altera imediatamente o estado da tabela para quem a consulta, mas não exclui os arquivos subjacentes (<code>.parquet</code>) do MinIO instantaneamente. O Delta Lake marca os arquivos antigos como obsoletos e cria novos arquivos sem os registros deletados. Isso é o que permite a funcionalidade de <em>Time Travel</em>. Para recuperar o espaço em disco de fato, é necessário executar o comando <code>VACUUM</code> posteriormente.</p>
+</div>
+<p><strong>Script de Exclusão:</strong>
 <div class="highlight"><pre><span></span><code><span class="n">dt_pagamento</span> <span class="o">=</span> <span class="n">DeltaTable</span><span class="o">.</span><span class="n">forPath</span><span class="p">(</span><span class="n">spark</span><span class="p">,</span> <span class="n">bronze</span><span class="p">(</span><span class="s1">&#39;pagamento&#39;</span><span class="p">))</span>
+
+<span class="c1"># Exclusão condicional direta no Data Lake</span>
 <span class="n">dt_pagamento</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">condition</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s1">&#39;situacao&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s1">&#39;Cancelado&#39;</span><span class="p">)</span>
-</code></pre></div>
+</code></pre></div></p>
 
 
 

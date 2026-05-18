@@ -76,7 +76,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#delta-lake" class="md-skip">
+        <a href="#delta-lake-transacoes-acid-no-data-lake" class="md-skip">
           Ir para o conteúdo
         </a>
       
@@ -665,10 +665,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#time-travel-viagem-no-tempo" class="md-nav__link">
+  <a href="#viagem-no-tempo-time-travel" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Time Travel (Viagem no Tempo)
+        Viagem no Tempo (Time Travel)
       
     </span>
   </a>
@@ -676,10 +676,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#audit-log" class="md-nav__link">
+  <a href="#log-de-transacoes-audit-log" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Audit Log
+        Log de Transações (Audit Log)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#evolucao-e-protecao-de-esquema" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Evolução e Proteção de Esquema
       
     </span>
   </a>
@@ -750,24 +761,42 @@
   
 
 
-<h1 id="delta-lake">Delta Lake</h1>
-<p>O <strong>Delta Lake</strong> fornece garantias ACID (Atomicidade, Consistência, Isolamento e Durabilidade) escaláveis sobre Data Lakes. Ele atua como uma camada de armazenamento que traz confiabilidade a lagos baseados em Parquet.</p>
-<h2 id="time-travel-viagem-no-tempo">Time Travel (Viagem no Tempo)</h2>
-<p>O Delta guarda um histórico das alterações utilizando versionamento. Isso possibilita consultar ou reverter dados como eles estavam em um determinado momento, usando a funcionalidade <code>versionAsOf</code>.</p>
-<div class="highlight"><pre><span></span><code><span class="n">spark</span><span class="o">.</span><span class="n">read</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;delta&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s1">&#39;versionAsOf&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> \
+<h1 id="delta-lake-transacoes-acid-no-data-lake">Delta Lake: Transações ACID no Data Lake</h1>
+<p>O <strong>Delta Lake</strong> é a camada de armazenamento que traz a confiabilidade dos bancos de dados relacionais tradicionais para os Data Lakes baseados em arquivos (como o formato Parquet armazenado em nosso bucket MinIO). Ele garante que todas as operações em nosso pipeline sigam os princípios ACID (Atomicidade, Consistência, Isolamento e Durabilidade).</p>
+<hr />
+<h2 id="viagem-no-tempo-time-travel">Viagem no Tempo (Time Travel)</h2>
+<p>No contexto de dados governamentais e despesas públicas, a auditabilidade é um requisito crítico. O Delta Lake mantém um histórico estruturado das alterações, permitindo consultar o estado exato de uma tabela em qualquer ponto do passado.</p>
+<div class="admonition tip">
+<p class="admonition-title">Caso de Uso: Auditoria de Empenhos</p>
+<p>Se a situação de um <code>empenho</code> for alterada indevidamente ou registros forem excluídos acidentalmente por um script DML, podemos utilizar a funcionalidade <code>versionAsOf</code> para ler os dados exatamente como estavam antes do erro, facilitando a recuperação e a análise forense.</p>
+</div>
+<p><strong>Exemplo de consulta à versão inicial (0) da tabela:</strong>
+<div class="highlight"><pre><span></span><code><span class="c1"># Acessando o snapshot exato da versão 0 da tabela de empenhos</span>
+<span class="n">spark</span><span class="o">.</span><span class="n">read</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;delta&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s1">&#39;versionAsOf&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> \
     <span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">bronze</span><span class="p">(</span><span class="s1">&#39;empenho&#39;</span><span class="p">))</span> \
-    <span class="o">.</span><span class="n">groupBy</span><span class="p">(</span><span class="s1">&#39;situacao&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">count</span><span class="p">()</span><span class="o">.</span><span class="n">orderBy</span><span class="p">(</span><span class="s1">&#39;situacao&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-</code></pre></div>
-<h2 id="audit-log">Audit Log</h2>
-<p>Cada operação (Write, Update, Delete) fica detalhadamente registrada no diretório oculto <code>_delta_log/</code>. Essa trilha permite total rastreabilidade das mutações sofridas pelas tabelas ao longo de sua existência.</p>
-<div class="highlight"><pre><span></span><code><span class="n">DeltaTable</span><span class="o">.</span><span class="n">forPath</span><span class="p">(</span><span class="n">spark</span><span class="p">,</span> <span class="n">bronze</span><span class="p">(</span><span class="s1">&#39;empenho&#39;</span><span class="p">))</span> \
+    <span class="o">.</span><span class="n">groupBy</span><span class="p">(</span><span class="s1">&#39;situacao&#39;</span><span class="p">)</span> \
+    <span class="o">.</span><span class="n">count</span><span class="p">()</span> \
+    <span class="o">.</span><span class="n">orderBy</span><span class="p">(</span><span class="s1">&#39;situacao&#39;</span><span class="p">)</span> \
+    <span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</code></pre></div></p>
+<hr />
+<h2 id="log-de-transacoes-audit-log">Log de Transações (Audit Log)</h2>
+<p>Toda modificação realizada nos dados (seja um Insert, Update, Delete ou Merge) é registrada de forma sequencial e detalhada no diretório de metadados <code>_delta_log/</code>. Este log atua como a fonte única da verdade, garantindo rastreabilidade total das mutações sofridas pelas tabelas ao longo de sua existência.</p>
+<p><strong>Exemplo de extração do histórico de operações:</strong>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">delta.tables</span><span class="w"> </span><span class="kn">import</span> <span class="n">DeltaTable</span>
+
+<span class="c1"># Inspecionando as métricas, timestamps e tipos de operação</span>
+<span class="n">DeltaTable</span><span class="o">.</span><span class="n">forPath</span><span class="p">(</span><span class="n">spark</span><span class="p">,</span> <span class="n">bronze</span><span class="p">(</span><span class="s1">&#39;empenho&#39;</span><span class="p">))</span> \
     <span class="o">.</span><span class="n">history</span><span class="p">()</span> \
     <span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s1">&#39;version&#39;</span><span class="p">,</span> <span class="s1">&#39;timestamp&#39;</span><span class="p">,</span> <span class="s1">&#39;operation&#39;</span><span class="p">,</span> <span class="s1">&#39;operationMetrics&#39;</span><span class="p">)</span> \
     <span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="n">truncate</span><span class="o">=</span><span class="mi">60</span><span class="p">)</span>
-</code></pre></div>
+</code></pre></div></p>
+<hr />
+<h2 id="evolucao-e-protecao-de-esquema">Evolução e Proteção de Esquema</h2>
+<p>Ao processar dados extraídos diretamente de bancos transacionais (SQL Server), é comum nos depararmos com alterações imprevistas na estrutura de origem, como a mudança de um tipo de dado ou a injeção de colunas não mapeadas.</p>
 <div class="admonition success">
-<p class="admonition-title">Schema Enforcement</p>
-<p>Recurso de segurança que rejeita silenciosamente <em>jobs</em> que tentem inserir dados com esquemas incompatíveis com a estrutura original da tabela, impedindo a corrupção física do Data Lake.</p>
+<p class="admonition-title">Schema Enforcement (Garantia de Integridade)</p>
+<p>O <strong>Schema Enforcement</strong> é um recurso de segurança nativo do Delta Lake que atua como um "porteiro" para o Data Lake. Ele rejeita automaticamente e falha <em>jobs</em> do Spark que tentem inserir dados com esquemas incompatíveis com a estrutura registrada da tabela. Isso impede a corrupção física dos arquivos, exigindo que qualquer alteração de esquema (Schema Evolution) seja declarada explicitamente no código pelo Engenheiro de Dados.</p>
 </div>
 
 

@@ -74,7 +74,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#tabelas-gerenciadas-vs-nao-gerenciadas" class="md-skip">
+        <a href="#tabelas-gerenciadas-vs-nao-gerenciadas-no-lakehouse" class="md-skip">
           Ir para o conteúdo
         </a>
       
@@ -691,10 +691,32 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#tabelas-nao-gerenciadas-unmanaged-tables" class="md-nav__link">
+  <a href="#fluxo-de-exclusao-arquitetura-visual" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Tabelas Não Gerenciadas (Unmanaged Tables)
+        📊 Fluxo de Exclusão (Arquitetura Visual)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#quadro-comparativo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        📋 Quadro Comparativo
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tabelas-nao-gerenciadas-unmanaged-external-tables" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tabelas Não Gerenciadas (Unmanaged / External Tables)
       
     </span>
   </a>
@@ -748,22 +770,81 @@
   
 
 
-<h1 id="tabelas-gerenciadas-vs-nao-gerenciadas">Tabelas Gerenciadas vs. Não Gerenciadas</h1>
-<p>Ao trabalhar com o Spark Catalog e salvar DataFrames utilizando a instrução <code>CREATE TABLE</code>, estabelecemos o nível de gerenciamento físico e lógico que o Spark terá sobre os dados.</p>
-<h2 id="tabelas-nao-gerenciadas-unmanaged-tables">Tabelas Não Gerenciadas (Unmanaged Tables)</h2>
-<p>Abordagem utilizada ativamente neste projeto.</p>
+<h1 id="tabelas-gerenciadas-vs-nao-gerenciadas-no-lakehouse">Tabelas Gerenciadas vs. Não Gerenciadas no Lakehouse</h1>
+<p>Ao estruturar o armazenamento no Apache Spark (utilizando o Spark Catalog ou Hive Metastore) e salvar DataFrames através de instruções DDL como <code>CREATE TABLE</code>, estabelecemos o nível de controle lógico e físico que o motor de processamento terá sobre o ciclo de vida dos dados. </p>
+<p>Compreender essa diferença é fundamental para a governança e segurança do nosso Lakehouse.</p>
+<hr />
+<h2 id="fluxo-de-exclusao-arquitetura-visual">📊 Fluxo de Exclusão (Arquitetura Visual)</h2>
+<p>O diagrama abaixo ilustra o comportamento do motor do Spark ao receber um comando de exclusão (<code>DROP TABLE</code>) para ambos os tipos de tabela:</p>
+<div class="highlight"><pre><span></span><code>graph LR
+    subgraph Tabelas Gerenciadas
+        MG[Comando: DROP TABLE] --&gt; M_Meta[Remove Metadados do Catálogo]
+        MG --&gt; M_Data[Exclui Arquivos Físicos do Storage]
+    end
+
+    subgraph Tabelas Não Gerenciadas
+        UG[Comando: DROP TABLE] --&gt; U_Meta[Remove Metadados do Catálogo]
+        UG -.-&gt;|Mantém Intacto| U_Data[Arquivos Físicos no MinIO]
+    end
+
+    style M_Data fill:#CC292B,stroke:#333,stroke-width:2px,color:#fff
+    style U_Data fill:#005288,stroke:#333,stroke-width:2px,color:#fff
+</code></pre></div>
+<hr />
+<h2 id="quadro-comparativo">📋 Quadro Comparativo</h2>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Característica</th>
+<th style="text-align: left;">Tabela Não Gerenciada (Externa)</th>
+<th style="text-align: left;">Tabela Gerenciada (Interna)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>Definição de Local</strong></td>
+<td style="text-align: left;">Explícita pelo desenvolvedor via <code>LOCATION</code></td>
+<td style="text-align: left;">Automática no diretório padrão (<code>spark-warehouse/</code>)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Responsabilidade do Spark</strong></td>
+<td style="text-align: left;">Gerencia estritamente os metadados</td>
+<td style="text-align: left;">Gerencia metadados e arquivos físicos</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Impacto do <code>DROP TABLE</code></strong></td>
+<td style="text-align: left;">Remove catálogo lógico. <strong>Dados físicos são mantidos.</strong></td>
+<td style="text-align: left;">Remove catálogo lógico. <strong>Dados físicos são excluídos.</strong></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Uso no Projeto SED</strong></td>
+<td style="text-align: left;">Abordagem padrão (Landing/Bronze Zone no MinIO)</td>
+<td style="text-align: left;">Evitada por risco operacional e falta de isolamento</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="tabelas-nao-gerenciadas-unmanaged-external-tables">Tabelas Não Gerenciadas (Unmanaged / External Tables)</h2>
+<p>Esta é a abordagem arquitetural <strong>adotada ativamente</strong> neste projeto para o tráfego de dados no MinIO.</p>
 <ul>
-<li><strong>Conceito:</strong> O desenvolvedor define especificamente o diretório onde os dados serão salvos através da cláusula <code>LOCATION</code>.</li>
-<li><strong>Comportamento:</strong> O Spark administra <strong>apenas os metadados</strong> no catálogo. </li>
-<li><strong>Segurança:</strong> A execução de um comando <code>DROP TABLE</code> remove exclusivamente os registros metadados do Hive Metastore/Catalog, porém <strong>não</strong> apaga os dados físicos contidos no armazenamento em nuvem (MinIO).</li>
+<li><strong>Conceito:</strong> O Engenheiro de Dados define explicitamente o diretório onde os arquivos físicos serão persistidos, utilizando a cláusula <code>LOCATION</code> (exemplo: <code>LOCATION 's3a://bronze/empenho'</code>).</li>
+<li><strong>Comportamento:</strong> O Spark administra apenas os metadados (esquema, particionamento, nome da tabela) no catálogo lógico. O armazenamento físico é considerado externo à responsabilidade exclusiva da engine.</li>
 </ul>
+<div class="admonition success">
+<p class="admonition-title">Segurança Arquitetural no Projeto</p>
+<p>Utilizamos tabelas não gerenciadas para garantir a proteção dos dados abertos de Despesa Pública. Caso um analista ou um script defeituoso execute um <code>DROP TABLE</code> acidental, o impacto é nulo na camada física. Basta recriar o metadado apontando para o mesmo <code>LOCATION</code> e a tabela estará restaurada instantaneamente, sem necessidade de reprocessamento.</p>
+</div>
+<hr />
 <h2 id="tabelas-gerenciadas-managed-tables">Tabelas Gerenciadas (Managed Tables)</h2>
-<p>Abordagem padrão em instâncias simples de armazenamento interno.</p>
+<p>Esta é a abordagem padrão do Spark quando um DataFrame é salvo como tabela sem a especificação de um caminho externo.</p>
 <ul>
-<li><strong>Conceito:</strong> O Spark gerencia completamente tanto o registro no catálogo quanto o armazenamento físico dos dados na estrutura de diretórios do <em>warehouse</em> interno.</li>
-<li><strong>Comportamento:</strong> A vida útil do dado está atrelada à vida útil da tabela.</li>
-<li><strong>Risco:</strong> Executar <code>DROP TABLE</code> elimina simultaneamente os metadados e os arquivos físicos no sistema de origem, de forma irreversível.</li>
+<li><strong>Conceito:</strong> O Spark assume a responsabilidade completa sobre o ecossistema.</li>
+<li><strong>Comportamento:</strong> Existe um forte acoplamento (tight coupling). A vida útil do dado físico está estritamente atrelada à vida útil da entidade lógica no banco de dados.</li>
 </ul>
+<div class="admonition warning">
+<p class="admonition-title">Por que evitamos esta abordagem?</p>
+<p>Em um pipeline corporativo que lida com histórico financeiro (empenhos, liquidações e pagamentos), o acoplamento rígido de tabelas gerenciadas representa um risco crítico. A exclusão de uma tabela gerenciada resultaria na perda irrecuperável do histórico processado, exigindo a reexecução completa da extração JDBC na origem (SQL Server).</p>
+</div>
 
 
 

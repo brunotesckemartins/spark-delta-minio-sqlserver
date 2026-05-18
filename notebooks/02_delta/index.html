@@ -76,7 +76,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#02-refinamento-para-delta-lake-bronze" class="md-skip">
+        <a href="#02-refinamento-para-a-camada-bronze-delta-lake" class="md-skip">
           Ir para o conteúdo
         </a>
       
@@ -550,10 +550,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#spark-session-integrada-ao-delta" class="md-nav__link">
+  <a href="#arquitetura-de-refinamento-e-tipagem" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Spark Session Integrada ao Delta
+        Arquitetura de Refinamento e Tipagem
       
     </span>
   </a>
@@ -561,13 +561,41 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#criacao-e-registro-das-delta-tables" class="md-nav__link">
+  <a href="#spark-session-integrada-ao-delta-e-s3" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Criação e Registro das Delta Tables
+        Spark Session Integrada ao Delta e S3
       
     </span>
   </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#enriquecimento-de-metadados-e-registro-no-catalogo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Enriquecimento de Metadados e Registro no Catálogo
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Enriquecimento de Metadados e Registro no Catálogo">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#estrategia-de-persistencia" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Estratégia de Persistência
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -750,11 +778,32 @@
   
 
 
-<h1 id="02-refinamento-para-delta-lake-bronze">02 - Refinamento para Delta Lake (Bronze)</h1>
-<p>O refinamento converte os dados legados para um formato colunar de alto desempenho. Lemos os arquivos CSV não-tipados da <code>landing-zone</code>, aplicamos o schema rigoroso e gravamos no bucket <code>bronze</code> no formato Delta.</p>
-<h2 id="spark-session-integrada-ao-delta">Spark Session Integrada ao Delta</h2>
-<p>A lista de dependências do S3 é passada através da função <code>extra_packages</code> do gerenciador nativo do Delta Lake para evitar sobrescritas de configuração.</p>
-<div class="highlight"><pre><span></span><code><span class="n">EXTRA_PACKAGES</span> <span class="o">=</span> <span class="p">[</span>
+<h1 id="02-refinamento-para-a-camada-bronze-delta-lake">02 - Refinamento para a Camada Bronze (Delta Lake)</h1>
+<p>Nesta etapa, realizamos a transição dos dados da <strong>Landing Zone</strong> (onde os arquivos estão em estado bruto e sem tipagem rigorosa) para a <strong>Bronze Zone</strong>. O principal objetivo é converter os arquivos CSV legados para o formato <strong>Delta Lake</strong>, um formato colunar de alto desempenho que habilita transações ACID e viagens no tempo.</p>
+<hr />
+<h2 id="arquitetura-de-refinamento-e-tipagem">Arquitetura de Refinamento e Tipagem</h2>
+<p>O fluxo abaixo descreve a leitura dos dados brutos no MinIO, a aplicação de metadados de auditoria e a persistência final como tabelas Delta registradas no catálogo:</p>
+<div class="highlight"><pre><span></span><code>graph LR
+    A[(MinIO Storage&lt;br&gt;landing-zone / CSV)] --&gt;|Leitura e Inferência| B(Apache Spark&lt;br&gt;Refining Process)
+    B --&gt;|Augmented Metadata| C[(MinIO Storage&lt;br&gt;bronze / Delta)]
+    C --- D{{Spark Catalog&lt;br&gt;Unmanaged Tables}}
+
+    style A fill:#C7202C,stroke:#333,stroke-width:2px,color:#fff
+    style C fill:#00AEEF,stroke:#333,stroke-width:2px,color:#fff
+    style D fill:#f3f4f6,stroke:#333,stroke-dasharray: 5 5
+</code></pre></div>
+<hr />
+<h2 id="spark-session-integrada-ao-delta-e-s3">Spark Session Integrada ao Delta e S3</h2>
+<p>Para esta etapa, utilizamos o utilitário <code>configure_spark_with_delta_pip</code>. Esta abordagem é preferível em ambientes de produção pois garante que as versões do JAR do Delta e da biblioteca Python estejam sincronizadas, além de permitir a injeção de pacotes extras para conectividade S3A.</p>
+<div class="admonition info">
+<p class="admonition-title">Isolamento de Dependências</p>
+<p>A configuração <code>spark.sql.extensions</code> e o uso do <code>DeltaCatalog</code> são obrigatórios para habilitar as funcionalidades avançadas do Delta Lake, como o <code>MERGE INTO</code> e o <code>VACUUM</code>. Sem essas extensões, o Spark trataria os arquivos apenas como Parquet comum, perdendo as garantias de integridade do log de transações.</p>
+</div>
+<p><strong>Script de Inicialização Técnica:</strong>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">pyspark.sql</span><span class="w"> </span><span class="kn">import</span> <span class="n">SparkSession</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">delta</span><span class="w"> </span><span class="kn">import</span> <span class="n">configure_spark_with_delta_pip</span>
+
+<span class="n">EXTRA_PACKAGES</span> <span class="o">=</span> <span class="p">[</span>
     <span class="s2">&quot;org.apache.hadoop:hadoop-aws:3.3.4&quot;</span><span class="p">,</span>
     <span class="s2">&quot;com.amazonaws:aws-java-sdk-bundle:1.12.367&quot;</span>
 <span class="p">]</span>
@@ -762,38 +811,62 @@
 <span class="n">builder</span> <span class="o">=</span> <span class="p">(</span>
     <span class="n">SparkSession</span><span class="o">.</span><span class="n">builder</span>
     <span class="o">.</span><span class="n">appName</span><span class="p">(</span><span class="s1">&#39;DespesaPublica-02-CSV-to-Delta&#39;</span><span class="p">)</span>
-    <span class="o">.</span><span class="n">config</span><span class="p">(</span><span class="s1">&#39;spark.sql.extensions&#39;</span><span class="p">,</span>
+    <span class="o">.</span><span class="n">config</span><span class="p">(</span><span class="s1">&#39;spark.sql.extensions&#39;</span><span class="p">,</span> 
             <span class="s1">&#39;io.delta.sql.DeltaSparkSessionExtension&#39;</span><span class="p">)</span>
-    <span class="o">.</span><span class="n">config</span><span class="p">(</span><span class="s1">&#39;spark.sql.catalog.spark_catalog&#39;</span><span class="p">,</span>
+    <span class="o">.</span><span class="n">config</span><span class="p">(</span><span class="s1">&#39;spark.sql.catalog.spark_catalog&#39;</span><span class="p">,</span> 
             <span class="s1">&#39;org.apache.spark.sql.delta.catalog.DeltaCatalog&#39;</span><span class="p">)</span>
-    <span class="o">.</span><span class="n">config</span><span class="p">(</span><span class="s1">&#39;spark.hadoop.fs.s3a.endpoint&#39;</span><span class="p">,</span>          <span class="n">MINIO_ENDPOINT</span><span class="p">)</span>
-    <span class="o">.</span><span class="n">config</span><span class="p">(</span><span class="s1">&#39;spark.hadoop.fs.s3a.access.key&#39;</span><span class="p">,</span>        <span class="n">MINIO_ACCESS_KEY</span><span class="p">)</span>
-    <span class="o">.</span><span class="n">config</span><span class="p">(</span><span class="s1">&#39;spark.hadoop.fs.s3a.secret.key&#39;</span><span class="p">,</span>        <span class="n">MINIO_SECRET_KEY</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">config</span><span class="p">(</span><span class="s1">&#39;spark.hadoop.fs.s3a.endpoint&#39;</span><span class="p">,</span>         <span class="n">MINIO_ENDPOINT</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">config</span><span class="p">(</span><span class="s1">&#39;spark.hadoop.fs.s3a.access.key&#39;</span><span class="p">,</span>       <span class="n">MINIO_ACCESS_KEY</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">config</span><span class="p">(</span><span class="s1">&#39;spark.hadoop.fs.s3a.secret.key&#39;</span><span class="p">,</span>       <span class="n">MINIO_SECRET_KEY</span><span class="p">)</span>
     <span class="o">.</span><span class="n">config</span><span class="p">(</span><span class="s1">&#39;spark.hadoop.fs.s3a.path.style.access&#39;</span><span class="p">,</span> <span class="s1">&#39;true&#39;</span><span class="p">)</span>
-    <span class="o">.</span><span class="n">config</span><span class="p">(</span><span class="s1">&#39;spark.hadoop.fs.s3a.impl&#39;</span><span class="p">,</span>
+    <span class="o">.</span><span class="n">config</span><span class="p">(</span><span class="s1">&#39;spark.hadoop.fs.s3a.impl&#39;</span><span class="p">,</span> 
             <span class="s1">&#39;org.apache.hadoop.fs.s3a.S3AFileSystem&#39;</span><span class="p">)</span>
-    <span class="o">.</span><span class="n">config</span><span class="p">(</span><span class="s1">&#39;spark.hadoop.fs.s3a.connection.ssl.enabled&#39;</span><span class="p">,</span> <span class="s1">&#39;false&#39;</span><span class="p">)</span>
 <span class="p">)</span>
 
 <span class="n">spark</span> <span class="o">=</span> <span class="n">configure_spark_with_delta_pip</span><span class="p">(</span><span class="n">builder</span><span class="p">,</span> <span class="n">extra_packages</span><span class="o">=</span><span class="n">EXTRA_PACKAGES</span><span class="p">)</span><span class="o">.</span><span class="n">getOrCreate</span><span class="p">()</span>
-</code></pre></div>
-<h2 id="criacao-e-registro-das-delta-tables">Criação e Registro das Delta Tables</h2>
-<p>Adicionamos colunas de auditoria aos DataFrames (<code>dt_carga</code> e <code>origem</code>), salvamos em formato <code>delta</code> e as registramos no catálogo Spark apontando para a localização remota no MinIO.</p>
-<div class="highlight"><pre><span></span><code>    <span class="n">df</span> <span class="o">=</span> <span class="p">(</span>
+</code></pre></div></p>
+<hr />
+<h2 id="enriquecimento-de-metadados-e-registro-no-catalogo">Enriquecimento de Metadados e Registro no Catálogo</h2>
+<p>Durante a conversão de CSV para Delta, aplicamos uma estratégia de <strong>Metadata Augmentation</strong> (Aumento de Metadados). Adicionamos colunas que facilitam a linhagem de dados e a depuração futura.</p>
+<h3 id="estrategia-de-persistencia">Estratégia de Persistência</h3>
+<ol>
+<li><strong>Adição de Linhagem:</strong> Inserimos o carimbo de tempo da carga (<code>dt_carga</code>) e a trilha de processamento (<code>origem</code>).</li>
+<li><strong>Escrita Delta:</strong> Os dados são salvos no MinIO utilizando o protocolo <code>s3a</code>.</li>
+<li><strong>Registro Lógico:</strong> Criamos uma tabela <strong>Não Gerenciada</strong> no catálogo Spark para permitir consultas via SQL padrão.</li>
+</ol>
+<div class="admonition success">
+<p class="admonition-title">Vantagem do Formato Colunar</p>
+<p>Diferente do CSV lido na Landing Zone, os arquivos na Bronze Zone são otimizados. O Delta Lake utiliza o formato Parquet internamente, o que permite ao Spark realizar o <em>column pruning</em> (ler apenas as colunas necessárias), reduzindo drasticamente o consumo de I/O e memória em relatórios de despesas.</p>
+</div>
+<p><strong>Script de Refinamento:</strong>
+<div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">pyspark.sql.functions</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">F</span>
+
+<span class="k">for</span> <span class="n">tabela</span> <span class="ow">in</span> <span class="n">TABELAS</span><span class="p">:</span>
+    <span class="c1"># 1. Leitura do dado bruto (Schema Inference)</span>
+    <span class="n">csv_path</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;s3a://</span><span class="si">{</span><span class="n">BUCKET_LANDING</span><span class="si">}</span><span class="s1">/</span><span class="si">{</span><span class="n">tabela</span><span class="si">}</span><span class="s1">&#39;</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">read</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s1">&#39;header&#39;</span><span class="p">,</span> <span class="s1">&#39;true&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s1">&#39;inferSchema&#39;</span><span class="p">,</span> <span class="s1">&#39;true&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">csv</span><span class="p">(</span><span class="n">csv_path</span><span class="p">)</span>
+
+    <span class="c1"># 2. Adição de colunas de linhagem (Auditoria)</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="p">(</span>
         <span class="n">df</span>
         <span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="s1">&#39;dt_carga&#39;</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span><span class="n">current_timestamp</span><span class="p">())</span>
         <span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="s1">&#39;origem&#39;</span><span class="p">,</span>   <span class="n">F</span><span class="o">.</span><span class="n">lit</span><span class="p">(</span><span class="s1">&#39;sqlserver -&gt; landing-zone -&gt; bronze&#39;</span><span class="p">))</span>
     <span class="p">)</span>
 
+    <span class="c1"># 3. Persistência física no MinIO</span>
     <span class="n">delta_path</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;s3a://</span><span class="si">{</span><span class="n">BUCKET_BRONZE</span><span class="si">}</span><span class="s1">/</span><span class="si">{</span><span class="n">tabela</span><span class="si">}</span><span class="s1">&#39;</span>
     <span class="n">df</span><span class="o">.</span><span class="n">write</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;delta&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">mode</span><span class="p">(</span><span class="s1">&#39;overwrite&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">delta_path</span><span class="p">)</span>
 
+    <span class="c1"># 4. Registro no catálogo Spark</span>
+    <span class="n">spark</span><span class="o">.</span><span class="n">sql</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;CREATE DATABASE IF NOT EXISTS despesa_publica&quot;</span><span class="p">)</span>
     <span class="n">spark</span><span class="o">.</span><span class="n">sql</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
 <span class="s2">        CREATE TABLE IF NOT EXISTS despesa_publica.</span><span class="si">{</span><span class="n">tabela</span><span class="si">}</span>
 <span class="s2">        USING DELTA</span>
 <span class="s2">        LOCATION &#39;</span><span class="si">{</span><span class="n">delta_path</span><span class="si">}</span><span class="s2">&#39;</span>
 <span class="s2">    &quot;&quot;&quot;</span><span class="p">)</span>
-</code></pre></div>
+
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Tabela &#39;</span><span class="si">{</span><span class="n">tabela</span><span class="si">}</span><span class="s2">&#39; refinada e registrada na camada Bronze.&quot;</span><span class="p">)</span>
+</code></pre></div></p>
 
 
 

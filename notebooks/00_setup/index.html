@@ -76,7 +76,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#00-setup-do-sql-server" class="md-skip">
+        <a href="#00-setup-e-carga-inicial-do-sql-server" class="md-skip">
           Ir para o conteúdo
         </a>
       
@@ -494,10 +494,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#inicializacao-do-spark-com-jdbc" class="md-nav__link">
+  <a href="#arquitetura-da-carga-inicial" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Inicialização do Spark com JDBC
+        Arquitetura da Carga Inicial
       
     </span>
   </a>
@@ -505,13 +505,41 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#criacao-e-carga-de-dados-csv-para-sql-server" class="md-nav__link">
+  <a href="#inicializacao-do-spark-com-injecao-de-dependencia-jdbc" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Criação e Carga de Dados (CSV para SQL Server)
+        Inicialização do Spark com Injeção de Dependência JDBC
       
     </span>
   </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#orquestracao-da-carga-csv-para-sql-server" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Orquestração da Carga (CSV para SQL Server)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Orquestração da Carga (CSV para SQL Server)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fluxo-logico-de-execucao" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fluxo Lógico de Execução
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -750,11 +778,28 @@
   
 
 
-<h1 id="00-setup-do-sql-server">00 - Setup do SQL Server</h1>
-<p>Nesta etapa, construímos a fundação do projeto. Este notebook simula o sistema transacional origem. Criamos o banco <code>DespesaPublicaDB</code>, geramos 11 tabelas estruturadas e realizamos a carga inicial via PySpark JDBC.</p>
-<h2 id="inicializacao-do-spark-com-jdbc">Inicialização do Spark com JDBC</h2>
-<p>O PySpark é configurado para baixar o driver <code>mssql-jdbc</code> automaticamente via Maven.</p>
-<div class="highlight"><pre><span></span><code><span class="n">spark</span> <span class="o">=</span> <span class="p">(</span>
+<h1 id="00-setup-e-carga-inicial-do-sql-server">00 - Setup e Carga Inicial do SQL Server</h1>
+<p>Nesta etapa primária, construímos a fundação de todo o pipeline de dados. Este notebook tem como objetivo simular o ambiente transacional (OLTP) de origem, criando o banco de dados <code>DespesaPublicaDB</code>, estruturando suas 11 tabelas e realizando a carga dos dados base.</p>
+<hr />
+<h2 id="arquitetura-da-carga-inicial">Arquitetura da Carga Inicial</h2>
+<p>O diagrama abaixo ilustra como o Spark atua como motor de ingestão para popular o banco relacional a partir de nossa base local de arquivos:</p>
+<div class="highlight"><pre><span></span><code>graph LR
+    A[Arquivos Locais&lt;br&gt;.csv] --&gt;|Leitura PySpark| B(Apache Spark&lt;br&gt;DataFrame)
+    B --&gt;|Escrita JDBC| C[(SQL Server 2022&lt;br&gt;DespesaPublicaDB)]
+
+    style C fill:#CC292B,stroke:#333,stroke-width:2px,color:#fff
+</code></pre></div>
+<hr />
+<h2 id="inicializacao-do-spark-com-injecao-de-dependencia-jdbc">Inicialização do Spark com Injeção de Dependência JDBC</h2>
+<p>Para que o Apache Spark consiga se comunicar nativamente com o SQL Server, é necessário carregar o driver JDBC oficial da Microsoft na máquina virtual Java (JVM) do Spark.</p>
+<div class="admonition info">
+<p class="admonition-title">Gerenciamento de Drivers via Maven</p>
+<p>Ao invés de baixar e configurar o driver JDBC manualmente no nível do sistema operacional, utilizamos a configuração <code>spark.jars.packages</code>. Isso instrui o Spark a baixar o artefato <code>.jar</code> diretamente do repositório Maven Central no momento da inicialização, garantindo portabilidade total do código entre diferentes ambientes.</p>
+</div>
+<p><strong>Script de Inicialização da Sessão:</strong>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">pyspark.sql</span><span class="w"> </span><span class="kn">import</span> <span class="n">SparkSession</span>
+
+<span class="n">spark</span> <span class="o">=</span> <span class="p">(</span>
     <span class="n">SparkSession</span><span class="o">.</span><span class="n">builder</span>
     <span class="o">.</span><span class="n">appName</span><span class="p">(</span><span class="s1">&#39;DespesaPublica-Setup&#39;</span><span class="p">)</span>
     <span class="o">.</span><span class="n">config</span><span class="p">(</span>
@@ -763,12 +808,27 @@
     <span class="p">)</span>
     <span class="o">.</span><span class="n">getOrCreate</span><span class="p">()</span>
 <span class="p">)</span>
+</code></pre></div></p>
+<hr />
+<h2 id="orquestracao-da-carga-csv-para-sql-server">Orquestração da Carga (CSV para SQL Server)</h2>
+<p>A inserção dos dados foi projetada para ser <strong>idempotente</strong>. Isso significa que podemos executar o notebook múltiplas vezes sem o risco de duplicar os registros no banco de dados.</p>
+<h3 id="fluxo-logico-de-execucao">Fluxo Lógico de Execução</h3>
+<div class="highlight"><pre><span></span><code>sequenceDiagram
+    participant P as PySpark
+    participant S as SQL Server
+
+    P-&gt;&gt;S: Envia instrução DELETE FROM tabela
+    S--&gt;&gt;P: Confirma exclusão dos dados antigos
+    P-&gt;&gt;P: Lê arquivo local (CSV) para a memória (DataFrame)
+    P-&gt;&gt;S: Grava DataFrame via protocolo JDBC (mode=&#39;append&#39;)
+    S--&gt;&gt;P: Confirma transação e persistência dos registros
 </code></pre></div>
-<h2 id="criacao-e-carga-de-dados-csv-para-sql-server">Criação e Carga de Dados (CSV para SQL Server)</h2>
-<p>Após a criação das tabelas via <code>sqlcmd</code>, iteramos sobre os arquivos locais e os inserimos no SQL Server usando o modo <code>append</code>.</p>
+<p><strong>Script de Ingestão:</strong>
 <div class="highlight"><pre><span></span><code><span class="k">for</span> <span class="n">tabela</span> <span class="ow">in</span> <span class="n">TABELAS</span><span class="p">:</span>
+    <span class="c1"># 1. Limpeza prévia para garantir idempotência da carga</span>
     <span class="n">sqlcmd</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;DELETE FROM </span><span class="si">{</span><span class="n">tabela</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">db</span><span class="o">=</span><span class="n">DATABASE</span><span class="p">)</span>
 
+    <span class="c1"># 2. Leitura do arquivo estático local</span>
     <span class="n">df</span> <span class="o">=</span> <span class="p">(</span>
         <span class="n">spark</span><span class="o">.</span><span class="n">read</span>
         <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s1">&#39;header&#39;</span><span class="p">,</span> <span class="s1">&#39;true&#39;</span><span class="p">)</span>
@@ -776,13 +836,16 @@
         <span class="o">.</span><span class="n">csv</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">DATA_DIR</span><span class="si">}</span><span class="s1">/</span><span class="si">{</span><span class="n">tabela</span><span class="si">}</span><span class="s1">.csv&#39;</span><span class="p">)</span>
     <span class="p">)</span>
 
+    <span class="c1"># 3. Escrita no banco de dados transacional</span>
     <span class="n">df</span><span class="o">.</span><span class="n">write</span><span class="o">.</span><span class="n">jdbc</span><span class="p">(</span>
         <span class="n">url</span><span class="o">=</span><span class="n">JDBC_DB</span><span class="p">,</span>
         <span class="n">table</span><span class="o">=</span><span class="n">tabela</span><span class="p">,</span>
         <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;append&#39;</span><span class="p">,</span>
         <span class="n">properties</span><span class="o">=</span><span class="n">JDBC_PROPS</span>
     <span class="p">)</span>
-</code></pre></div>
+
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Carga da tabela &#39;</span><span class="si">{</span><span class="n">tabela</span><span class="si">}</span><span class="s2">&#39; processada com sucesso.&quot;</span><span class="p">)</span>
+</code></pre></div></p>
 
 
 
