@@ -238,6 +238,11 @@ Para parar os serviços e remover os containers, preservando as configurações:
 ```bash
 docker compose down
 ```
+Para remover também os volumes (excluindo os bancos de dados criados e os buckets do MinIO):
+```bash
+docker compose down -v
+```
+
 ## Referências e Links Úteis
 
 * **Origem dos Dados:**
@@ -256,8 +261,3 @@ docker compose down
   * [uv - Fast Python Package Manager](https://docs.astral.sh/uv/)
   * [Docker Compose - Overview](https://docs.docker.com/compose/)
   * [MkDocs Material - Guia de Configuração](https://squidfunk.github.io/mkdocs-material/)
-
-Para remover também os volumes (excluindo os bancos de dados criados e os buckets do MinIO):
-```bash
-docker compose down -v
-```
